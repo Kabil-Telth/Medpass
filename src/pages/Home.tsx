@@ -216,21 +216,21 @@ const Home: React.FC = () => {
         <Container>
           <Row>
             <Col lg={8} className="mx-auto text-center mb-5">
-             <motion.div
+              <motion.div
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 1 }}
                 variants={slideInLeft}
               >
-              <h2 className="display-6 fw-bold text-primary-blue mb-3">
-                Who Is This For?
-              </h2>
-              <p className="lead">
-                This program is ideal for ambitious healthcare professionals seeking advancement
-                in the UK's elite medical system.
-              </p>
-            </motion.div>
+                <h2 className="display-6 fw-bold text-primary-blue mb-3">
+                  Who Is This For?
+                </h2>
+                <p className="lead">
+                  This program is ideal for ambitious healthcare professionals seeking advancement
+                  in the UK's elite medical system.
+                </p>
+              </motion.div>
             </Col>
           </Row>
 
@@ -289,8 +289,8 @@ const Home: React.FC = () => {
             </Col>
           </Row>
 
-          <Row>
-            <Col lg={6} className="mx-auto">
+          <Row className="align-items-center g-5">
+            <Col lg={7} className="mx-auto">
               <div className="timeline">
                 <div className="timeline-item">
                   <div className="timeline-content card1">
@@ -329,7 +329,7 @@ const Home: React.FC = () => {
                 </div>
               </div>
             </Col>
-            <Col lg={6}>
+            <Col lg={5}>
               <img
                 src={studyImg}
                 alt="Telth UK Program"
@@ -341,30 +341,48 @@ const Home: React.FC = () => {
       </section>
 
       {/* Call to Action Section */}
-      <section className="section-padding bg-gradient-secondary text-white">
+      <section className="section-padding bg-gradient-secondary text-white py-5 position-relative">
         <Container>
-          <Row className="text-center">
-            <Col lg={8} className="mx-auto">
-              <h2 className="display-6 fw-bold mb-4">
+          <Row className="justify-content-center text-center">
+            <Col lg={8}>
+              <h2 className="display-5 fw-bold mb-3">
                 Ready to Transform Your Healthcare Career?
               </h2>
-              <p className="lead mb-4">
+              <p className="lead mb-4 text-light opacity-90">
                 Join the next generation of healthcare professionals and secure your future
                 with guaranteed UK employment and world-class training.
               </p>
-              <div className="d-flex justify-content-center gap-3 flex-wrap">
-                <Button as={Link} to="/apply" className="btn btn-light btn-lg px-4">
+              <div className="d-flex justify-content-center align-items-center gap-3 flex-wrap">
+                <Button
+                  as={Link}
+                  to="/apply"
+                  className="btn btn-light btn-lg px-5 py-3 shadow-sm rounded-pill d-flex align-items-center"
+                >
                   <Clock className="me-2" size={20} />
                   Apply Now
                 </Button>
-                <Button as={Link} to="/contact" className="btn btn-outline-light btn-lg px-4">
+                <Button
+                  as={Link}
+                  to="/contact"
+                  className="btn btn-outline-light btn-lg px-5 py-3 rounded-pill border-2"
+                >
                   Get Information
                 </Button>
               </div>
             </Col>
           </Row>
         </Container>
+
+        {/* Optional decorative overlay for better gradient depth */}
+        <div
+          className="position-absolute top-0 start-0 w-100 h-100"
+          style={{
+            background: "linear-gradient(135deg, rgba(0,0,0,0.2), rgba(0,0,0,0.4))",
+            zIndex: 0,
+          }}
+        ></div>
       </section>
+
     </>
   );
 };
