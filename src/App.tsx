@@ -11,6 +11,7 @@ import { getRefreshTokenAPi } from './API/getRefreshTokenAPi';
 import { getRememberMe } from './Constant';
 import ResetPassword from './pages/Forgetpassword';
 import Forgetmailmodel from './pages/Forgetmailmodel';
+import Agencies from './components_Dash/Users/Agencies/Agencies';
 
 // Lazy load components
 
@@ -139,9 +140,9 @@ function MainContent() {
           <Route path="/dashboard" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="user-types" element={<UserDetails />} />
-            <Route path="unversity" element={<University />} />
+            <Route path="university" element={<University />} />
             <Route path='courses' element={<CourseDetails />} />
-            <Route path="agencies" element={<ComingSoon title="Agencies Management" />} />
+            <Route path="agencies" element={<Agencies />} />
             <Route path="students" element={<Userstudents />} />
             <Route path="notice" element={<ComingSoon title="Notice Board" />} />
             <Route path="fees-management" element={<ComingSoon title="Fees Management" />} />

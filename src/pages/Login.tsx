@@ -52,7 +52,6 @@ export default function AuthForm() {
       [name]: type === "checkbox" ? checked : value,
     }));
 
-    // Clear errors when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: false }));
     }
@@ -91,8 +90,6 @@ export default function AuthForm() {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
-    console.log("Starting login process...", userDetails); // Debug log
-
     if (!validateForm()) {
       toast.error("Please fill in all required fields");
       return;
@@ -100,24 +97,15 @@ export default function AuthForm() {
 
     try {
       setIsLoading(true);
-      console.log("Calling otpVerfiyAPi with:", {
-        username: userDetails.userName,
-        password: userDetails.password,
-      }); // Debug log
-
-      // First call → verify credentials (backend should send OTP)
       const otpResponse = await otpVerfiyAPi({
-        username: userDetails.userName,
+        email: userDetails.userName,
         password: userDetails.password,
       });
-
-      console.log("OTP API Response:", otpResponse); // Debug log
 
       setShowOtpModal(true); // open OTP modal
       toast.success("OTP sent successfully! Please check your phone/email.");
 
     } catch (error) {
-      console.error("Login error:", error); // Debug log
       const errorMessage = error?.response?.data?.detail ||
         error?.response?.data?.message ||
         error?.message ||
@@ -137,15 +125,8 @@ export default function AuthForm() {
 
     try {
       setIsLoading(true);
-      console.log("Calling loginApi with:", {
-        username: userDetails.userName,
-        password: userDetails.password,
-        otp: otp,
-      }); // Debug log
-
-      // Final login with OTP
       const responseData = await loginApi({
-        username: userDetails.userName,
+        email: userDetails.userName,
         password: userDetails.password,
         otp: otp,
       });
@@ -160,7 +141,6 @@ export default function AuthForm() {
       setRememberMe(userDetails.rememberMe);
       navigate("/dashboard");
     } catch (error) {
-      console.error("OTP verification error:", error); // Debug log
       const errorMessage = error?.response?.data?.detail ||
         error?.response?.data?.message ||
         error?.message ||

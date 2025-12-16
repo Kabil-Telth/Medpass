@@ -5,51 +5,76 @@ import { User } from "lucide-react";
 
 // Signup API
 const signUp = (responseData: any) => {
-  return axios.post(`${BASE_URL}users/`, responseData, headers)
-    .then(res => res.data);
+  return axios
+    .post(`${BASE_URL}users/`, responseData, headers)
+    .then((res) => res.data);
+};
+
+// Get User
+const getAllUser = () => {
+  return axios
+    .get(`${BASE_URL}users/`, headers_content())
+    .then((res) => res.data);
 };
 
 // OTP Trigger
-const otpVerfiyAPi = (payload: { username: string; password: string }) => {
-  return axios.post(`${BASE_URL}otp-trigger/`, payload, headers)
-    .then(res => res.data);
+const otpVerfiyAPi = (payload: { email: string; password: string }) => {
+  return axios
+    .post(`${BASE_URL}otp-trigger/`, payload, headers)
+    .then((res) => res.data);
 };
 
 //profile view
 const profileUpdate = (UserId: any, responseData: any) => {
-    return axios.patch(`${BASE_URL}users/${UserId}/`, responseData, headers_content())
-        .then(responseData => {
-            return responseData.data
-        })
-}
+  return axios
+    .patch(`${BASE_URL}users/${UserId}/`, responseData, headers_content())
+    .then((responseData) => {
+      return responseData.data;
+    });
+};
 
 // Login with OTP
-const loginApi = (payload: { username: string; password: string; otp: string }) => {
-  return axios.post(`${BASE_URL}token/`, payload, headers)
-    .then(res => res.data);
+const loginApi = (payload: {
+  emamil: string;
+  password: string;
+  otp: string;
+}) => {
+  return axios
+    .post(`${BASE_URL}token/`, payload, headers)
+    .then((res) => res.data);
 };
 
 // Get User
 const getUser = (userId: any) => {
-  return axios.get(`${BASE_URL}account/${userId}/`, headers_content())
-    .then(res => res.data);
+  return axios
+    .get(`${BASE_URL}account/${userId}/`, headers_content())
+    .then((res) => res.data);
 };
 
 // ✅ Get Invite Mail (used in Signup.tsx)
 const getInviteMail = (token: string) => {
-  return axios.get(`${BASE_URL}get-invite/${token}/`, headers_content())
-    .then(res => res.data);
+  return axios
+    .get(`${BASE_URL}get-invite/${token}/`, headers_content())
+    .then((res) => res.data);
 };
 
 // Reset Password
 const resetPassword = (userName: string, responseData: any) => {
-  return axios.put(`${BASE_URL}account/${userName}/change-password/`, responseData, headers_content())
-    .then(res => res.data);
+  return axios
+    .put(
+      `${BASE_URL}account/${userName}/change-password/`,
+      responseData,
+      headers_content()
+    )
+    .then((res) => res.data);
 };
 
 //get usertypes
 /// Get user list with refresh flow
-const usermaindashboardlist = async (page: number = 1, pageSize: number = 10) => {
+const usermaindashboardlist = async (
+  page: number = 1,
+  pageSize: number = 10
+) => {
   let accessToken = localStorage.getItem("accessToken");
   const refreshToken = localStorage.getItem("refresh_token");
 
@@ -98,25 +123,30 @@ const usermaindashboardlist = async (page: number = 1, pageSize: number = 10) =>
   }
 };
 
-
-
-
 // Send Invite
 const sendInvite = (responseData: any) => {
-  return axios.post(`${BASE_URL}send-invite/`, responseData, headers_content())
-    .then(res => res.data);
+  return axios
+    .post(`${BASE_URL}send-invite/`, responseData, headers_content())
+    .then((res) => res.data);
 };
 
 // Send Forgot Mail
 const sendforgetmail = (emailsend: { email: string }) => {
-  return axios.post(`${BASE_URL}send-forgot-password-email/`, emailsend)
-    .then(res => res.data);
+  return axios
+    .post(`${BASE_URL}send-forgot-password-email/`, emailsend)
+    .then((res) => res.data);
 };
 
 // Forget Password
-const forgetpassword = async (data: { token: string; new_password: string }) => {
+const forgetpassword = async (data: {
+  token: string;
+  new_password: string;
+}) => {
   try {
-    const res = await axios.post(`${BASE_URL}account/email/reset-password/`, data);
+    const res = await axios.post(
+      `${BASE_URL}account/email/reset-password/`,
+      data
+    );
     return res.data;
   } catch (error: any) {
     if (error.response && error.response.data) {
@@ -179,6 +209,7 @@ export {
   profileUpdate,
   loginApi,
   otpVerfiyAPi,
+  getAllUser,
   getUser,
   sendInvite,
   forgetpassword,
@@ -186,5 +217,5 @@ export {
   resetPassword,
   getInviteMail,
   usermaindashboardlist,
-  deleteUser, 
+  deleteUser,
 };

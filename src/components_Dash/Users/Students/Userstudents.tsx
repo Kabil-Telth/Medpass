@@ -1,18 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import {MaterialReactTable,  MRT_ColumnDef}  from 'material-react-table';
-import { Box, Button, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
-import { CheckCircle, Cancel } from '@mui/icons-material';
+import React, { useState, useEffect } from "react";
+import { MaterialReactTable, MRT_ColumnDef } from "material-react-table";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+} from "@mui/material";
+import { CheckCircle, Cancel } from "@mui/icons-material";
 // import { getApplicationsApi, updateApplicationStatusApi } from '../../API/ApplicationApi';
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+import { getAllUser } from "../../../API/UserApi";
 
 interface Application {
   id: number;
-  student_name: string;
+  username: string;
   email: string;
-  program: string;
-  course: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  phone: string;
   applied_on: string;
+  student_name?: string; 
+  program?: string; 
+  course?: string;
+  status?: string;
 }
 
 const StudentApplicationManager: React.FC = () => {
@@ -26,10 +37,18 @@ const StudentApplicationManager: React.FC = () => {
 
   const fetchApplications = async () => {
     try {
-      // const data = await getApplicationsApi();
-      // setApplications(data.results);
+      const data = await getAllUser();
+      const response = data?.results || data;
+      
+      if (Array.isArray(response)) {
+        const studentUsers = response.filter(element => 
+          element.role && element.role.toLowerCase() === "student"
+        );
+        setApplications(studentUsers);
+      }
     } catch (err) {
-      toast.error('Failed to fetch applications');
+      console.error("Error fetching applications:", err);
+      toast.error("Failed to fetch applications");
     }
   };
 
@@ -40,36 +59,26 @@ const StudentApplicationManager: React.FC = () => {
       fetchApplications();
       setOpen(false);
     } catch (err) {
-      toast.error('Failed to update status');
+      toast.error("Failed to update status");
     }
   };
 
   const columns: MRT_ColumnDef<Application>[] = [
-    { accessorKey: 'student_name', header: 'Student Name' },
-    { accessorKey: 'email', header: 'Email' },
-    { accessorKey: 'program', header: 'Program' },
-    { accessorKey: 'course', header: 'Course' },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      Cell: ({ cell }) => {
-        const status = cell.getValue<string>();
-        return (
-          <Chip
-            label={status}
-            color={
-              status === 'APPROVED'
-                ? 'success'
-                : status === 'REJECTED'
-                ? 'error'
-                : 'warning'
-            }
-            size="small"
-          />
-        );
-      },
+    { 
+      accessorKey: "username", 
+      header: "Student Name",
+      Cell: ({ cell }) => cell.getValue() || "N/A"
     },
-    { accessorKey: 'applied_on', header: 'Applied On' },
+    { 
+      accessorKey: "email", 
+      header: "Email",
+      Cell: ({ cell }) => cell.getValue() || "N/A"
+    },
+    { 
+      accessorKey: "phone", 
+      header: "Phone",
+      Cell: ({ cell }) => cell.getValue() || "N/A"
+    },
   ];
 
   return (
@@ -96,51 +105,73 @@ const StudentApplicationManager: React.FC = () => {
         )}
         initialState={{
           pagination: { pageSize: 5, pageIndex: 0 },
-          sorting: [{ id: 'applied_on', desc: true }],
+          sorting: [{ id: "applied_on", desc: true }],
         }}
+        muiTableBodyRowProps={({ row }) => ({
+          onClick: () => {
+            setSelectedApp(row.original);
+            setOpen(true);
+          },
+          sx: { cursor: 'pointer' },
+        })}
       />
 
       {/* Details Modal */}
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Application Details</DialogTitle>
         <DialogContent dividers>
           {selectedApp && (
-            <>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               <Typography>
-                <strong>Name:</strong> {selectedApp.student_name}
+                <strong>Student Name:</strong> {selectedApp.username || selectedApp.student_name || "N/A"}
               </Typography>
               <Typography>
-                <strong>Email:</strong> {selectedApp.email}
+                <strong>Email:</strong> {selectedApp.email || "N/A"}
               </Typography>
               <Typography>
-                <strong>Program:</strong> {selectedApp.program}
+                <strong>Phone:</strong> {selectedApp.phone || "N/A"}
               </Typography>
               <Typography>
-                <strong>Course:</strong> {selectedApp.course}
+                <strong>Program:</strong> {selectedApp.program || "Not specified"}
               </Typography>
               <Typography>
-                <strong>Status:</strong> {selectedApp.status}
+                <strong>Course:</strong> {selectedApp.course || "Not specified"}
               </Typography>
               <Typography>
-                <strong>Applied On:</strong> {selectedApp.applied_on}
+                <strong>Status:</strong> {selectedApp.status || "Pending"}
               </Typography>
-            </>
+              <Typography>
+                <strong>Applied On:</strong> {selectedApp.applied_on || "N/A"}
+              </Typography>
+            </Box>
           )}
         </DialogContent>
         <DialogActions>
           <Button
             color="success"
             startIcon={<CheckCircle />}
-            onClick={() => selectedApp && handleStatusUpdate(selectedApp.id, 'APPROVED')}
+            onClick={() =>
+              selectedApp && handleStatusUpdate(selectedApp.id, "APPROVED")
+            }
           >
             Approve
           </Button>
           <Button
             color="error"
             startIcon={<Cancel />}
-            onClick={() => selectedApp && handleStatusUpdate(selectedApp.id, 'REJECTED')}
+            onClick={() =>
+              selectedApp && handleStatusUpdate(selectedApp.id, "REJECTED")
+            }
           >
             Reject
+          </Button>
+          <Button onClick={() => setOpen(false)}>
+            Close
           </Button>
         </DialogActions>
       </Dialog>
