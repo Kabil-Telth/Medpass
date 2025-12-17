@@ -13,6 +13,7 @@ import { CheckCircle, Cancel } from "@mui/icons-material";
 // import { getApplicationsApi, updateApplicationStatusApi } from '../../API/ApplicationApi';
 import { toast } from "react-toastify";
 import { getAllUser } from "../../../API/UserApi";
+import moment from "moment";
 
 interface Application {
   id: number;
@@ -20,8 +21,8 @@ interface Application {
   email: string;
   phone: string;
   applied_on: string;
-  student_name?: string; 
-  program?: string; 
+  student_name?: string;
+  program?: string;
   course?: string;
   status?: string;
 }
@@ -39,10 +40,10 @@ const StudentApplicationManager: React.FC = () => {
     try {
       const data = await getAllUser();
       const response = data?.results || data;
-      
+
       if (Array.isArray(response)) {
-        const studentUsers = response.filter(element => 
-          element.role && element.role.toLowerCase() === "student"
+        const studentUsers = response.filter(
+          (element) => element.role && element.role.toLowerCase() === "student"
         );
         setApplications(studentUsers);
       }
@@ -64,20 +65,27 @@ const StudentApplicationManager: React.FC = () => {
   };
 
   const columns: MRT_ColumnDef<Application>[] = [
-    { 
-      accessorKey: "username", 
-      header: "Student Name",
-      Cell: ({ cell }) => cell.getValue() || "N/A"
+    {
+      accessorKey: "index",
+      header: "S.No",
+      size: 80,
+      Cell: ({ row }) => row.index + 1,
     },
-    { 
-      accessorKey: "email", 
+    {
+      accessorKey: "email",
       header: "Email",
-      Cell: ({ cell }) => cell.getValue() || "N/A"
     },
-    { 
-      accessorKey: "phone", 
+    {
+      accessorKey: "phone",
       header: "Phone",
-      Cell: ({ cell }) => cell.getValue() || "N/A"
+    },
+    {
+      accessorKey: "date_joined",
+      header: "DOJ",
+      Cell: ({ cell }) =>{
+        const value = cell.getValue();
+        return value ? moment(value).format("DD-MM-YYYY") : '-';
+      } 
     },
   ];
 
@@ -112,7 +120,7 @@ const StudentApplicationManager: React.FC = () => {
             setSelectedApp(row.original);
             setOpen(true);
           },
-          sx: { cursor: 'pointer' },
+          sx: { cursor: "pointer" },
         })}
       />
 
@@ -126,9 +134,10 @@ const StudentApplicationManager: React.FC = () => {
         <DialogTitle>Application Details</DialogTitle>
         <DialogContent dividers>
           {selectedApp && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
               <Typography>
-                <strong>Student Name:</strong> {selectedApp.username || selectedApp.student_name || "N/A"}
+                <strong>Student Name:</strong>{" "}
+                {selectedApp.username || selectedApp.student_name || "N/A"}
               </Typography>
               <Typography>
                 <strong>Email:</strong> {selectedApp.email || "N/A"}
@@ -137,7 +146,8 @@ const StudentApplicationManager: React.FC = () => {
                 <strong>Phone:</strong> {selectedApp.phone || "N/A"}
               </Typography>
               <Typography>
-                <strong>Program:</strong> {selectedApp.program || "Not specified"}
+                <strong>Program:</strong>{" "}
+                {selectedApp.program || "Not specified"}
               </Typography>
               <Typography>
                 <strong>Course:</strong> {selectedApp.course || "Not specified"}
@@ -170,9 +180,7 @@ const StudentApplicationManager: React.FC = () => {
           >
             Reject
           </Button>
-          <Button onClick={() => setOpen(false)}>
-            Close
-          </Button>
+          <Button onClick={() => setOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
