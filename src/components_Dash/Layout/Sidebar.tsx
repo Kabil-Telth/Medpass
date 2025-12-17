@@ -17,6 +17,7 @@ import {
   UserCog,
   School,
   BookOpen,
+  Database,
 } from 'lucide-react';
 import { clearAllLocalStorage } from '../../Constant';
 import Logout from './Logout';
@@ -44,7 +45,8 @@ const menuItems: MenuItem[] = [
     path: '/dashboard/user-types',
     icon: Users,
     children: [
-      { id: 'user-types', label: 'Admin', path: '/dashboard/user-types', icon: UserCog },
+      { id: 'user-types', label: 'Master', path: '/dashboard/user-types', icon: Database },
+      { id: 'admins', label: 'Admin', path: '/dashboard/admins', icon: UserCog },
       { id: 'university', label: 'University', path: '/dashboard/university', icon: School },
       { id: 'agencies', label: 'Agencies', path: '/dashboard/agencies', icon: Building2 },
       { id: 'students', label: 'Students', path: '/dashboard/students', icon: GraduationCap },

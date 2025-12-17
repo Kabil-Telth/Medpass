@@ -1,4 +1,8 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import moment from "moment";
+import { MoreVerticalIcon } from "lucide-react";
+import { Modal } from "react-bootstrap";
+import { toast } from "react-toastify";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
@@ -10,26 +14,15 @@ import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { styled } from "@mui/material/styles";
 import Collapse from "@mui/material/Collapse";
-import moment from "moment";
-import {
-  MaterialReactTable,
-  useMaterialReactTable,
-  MRT_GlobalFilterTextField,
-  MRT_ToggleFiltersButton,
-} from "material-react-table";
 import { IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
 import UniversityForm from "./UniversityForm";
-import UserForm from "./UserForm";
 import {
   deleteUnversitiesApi,
   getUniversitiesApi,
 } from "../../../API/UserTypesApi";
-import { MoreVerticalIcon } from "lucide-react";
-import { Modal } from "react-bootstrap";
-import { toast } from "react-toastify";
 import EmailRoleModal from "../EmailRoleModal";
 import { getAllUser } from "../../../API/UserApi";
+import CommonMRT from "../../../components/MaterialReactTable";
 
 const SectionHeader = styled(Box)(({ theme }) => ({
   display: "flex",
@@ -92,7 +85,7 @@ function University() {
         toast.error("Failed to delete university");
       })
       .finally(() => {
-        setShowModal(false); // Close the modal
+        setShowModal(false);
       });
   };
   const handleChange = (event, newValue) => {
@@ -281,76 +274,6 @@ function University() {
     []
   );
 
-  const userTable = useMaterialReactTable({
-    columns: userColumns,
-    data: users,
-    enableRowSelection: false,
-    enableColumnOrdering: true,
-    enableFacetedValues: true,
-    initialState: { showGlobalFilter: true },
-    positionGlobalFilter: "left",
-    renderTopToolbar: ({ table }) => (
-      <Box
-        sx={{ display: "flex", gap: "0.5rem", p: "0.5rem", flexWrap: "wrap" }}
-      >
-        <MRT_GlobalFilterTextField table={table} />
-        <MRT_ToggleFiltersButton table={table} />
-      </Box>
-    ),
-    renderRowActions: ({ row }) => (
-      <Box sx={{ display: "flex", gap: "0.5rem" }}>
-        <Tooltip title="Edit">
-          <IconButton onClick={() => console.log("Edit user:", row.original)}>
-            <Edit />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton
-            color="error"
-            onClick={() => console.log("Delete user:", row.original)}
-          >
-            <Delete />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    ),
-    muiTablePaperProps: {
-      elevation: 3,
-    },
-  });
-
-  const universityTable = useMaterialReactTable({
-    columns: universityColumns,
-    data: universities,
-    enableRowSelection: false,
-    enableColumnOrdering: true,
-    enableFacetedValues: true,
-    initialState: { showGlobalFilter: true },
-    positionGlobalFilter: "left",
-    renderTopToolbar: ({ table }) => (
-      <Box
-        sx={{ display: "flex", gap: "0.5rem", p: "0.5rem", flexWrap: "wrap" }}
-      >
-        <MRT_GlobalFilterTextField table={table} />
-        <MRT_ToggleFiltersButton table={table} />
-      </Box>
-    ),
-
-    muiTablePaperProps: {
-      elevation: 6,
-    },
-    muiTableBodyRowProps: {
-      sx: {
-        height: "36px",
-      },
-    },
-    muiTableBodyCellProps: {
-      sx: {
-        py: "4px",
-      },
-    },
-  });
-
   return (
     <Box sx={{ width: "100%", typography: "body1", p: 2 }}>
       <TabContext value={value}>
@@ -382,7 +305,10 @@ function University() {
             onClose={handleCancel}
           />
 
-          <MaterialReactTable table={userTable} />
+            <CommonMRT 
+         columns={userColumns}
+         data={users}
+        />
         </TabPanel>
 
         <TabPanel value="2" sx={{ p: 0, mt: 1 }}>
@@ -417,7 +343,10 @@ function University() {
             </Box>
           </Collapse>
 
-          <MaterialReactTable table={universityTable} />
+        <CommonMRT 
+         columns={universityColumns}
+         data={universities}
+        />
         </TabPanel>
 
         <Modal show={showModal} onHide={onHide} centered backdrop="static">

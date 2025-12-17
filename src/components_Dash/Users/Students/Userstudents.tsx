@@ -1,183 +1,101 @@
-import React, { useState, useEffect } from "react";
-import { MaterialReactTable, MRT_ColumnDef } from "material-react-table";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-} from "@mui/material";
+import React, { useEffect, useMemo, useState } from "react";
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Typography, Button } from "@mui/material";
 import { CheckCircle, Cancel } from "@mui/icons-material";
-// import { getApplicationsApi, updateApplicationStatusApi } from '../../API/ApplicationApi';
+import moment from "moment";
 import { toast } from "react-toastify";
 import { getAllUser } from "../../../API/UserApi";
-import moment from "moment";
+import CommonMRT from "../../../components/MaterialReactTable";
 
-interface Application {
+interface Student {
   id: number;
   username: string;
   email: string;
   phone: string;
-  applied_on: string;
-  student_name?: string;
-  program?: string;
-  course?: string;
+  date_joined: string;
   status?: string;
 }
 
-const StudentApplicationManager: React.FC = () => {
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
+const StudentApplicationManager = () => {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    fetchApplications();
+    fetchStudents();
   }, []);
 
-  const fetchApplications = async () => {
+  const fetchStudents = async () => {
     try {
       const data = await getAllUser();
-      const response = data?.results || data;
-
-      if (Array.isArray(response)) {
-        const studentUsers = response.filter(
-          (element) => element.role && element.role.toLowerCase() === "student"
-        );
-        setApplications(studentUsers);
-      }
-    } catch (err) {
-      console.error("Error fetching applications:", err);
-      toast.error("Failed to fetch applications");
+      const studentUsers = data.results.filter(
+        (u) => u.role?.toLowerCase() === "student"
+      );
+      setStudents(studentUsers);
+    } catch {
+      toast.error("Failed to fetch students");
     }
   };
 
-  const handleStatusUpdate = async (id: number, status: string) => {
-    try {
-      // await updateApplicationStatusApi(id, { status });
-      toast.success(`Application ${status.toLowerCase()}`);
-      fetchApplications();
-      setOpen(false);
-    } catch (err) {
-      toast.error("Failed to update status");
-    }
-  };
-
-  const columns: MRT_ColumnDef<Application>[] = [
-    {
-      accessorKey: "index",
-      header: "S.No",
-      size: 80,
-      Cell: ({ row }) => row.index + 1,
-    },
-    {
-      accessorKey: "email",
-      header: "Email",
-    },
-    {
-      accessorKey: "phone",
-      header: "Phone",
-    },
-    {
-      accessorKey: "date_joined",
-      header: "DOJ",
-      Cell: ({ cell }) =>{
-        const value = cell.getValue();
-        return value ? moment(value).format("DD-MM-YYYY") : '-';
-      } 
-    },
-  ];
+  const columns = useMemo(
+    () => [
+      {
+        header: "S.No",
+        size: 80,
+        Cell: ({ row }) => row.index + 1,
+      },
+      { accessorKey: "email", header: "Email" },
+      { accessorKey: "phone", header: "Phone" },
+      {
+        accessorKey: "date_joined",
+        header: "DOJ",
+        Cell: ({ cell }) =>
+          cell.getValue()
+            ? moment(cell.getValue()).format("DD-MM-YYYY")
+            : "-",
+      },
+    ],
+    []
+  );
 
   return (
     <Box p={3}>
-      <Typography variant="h5" gutterBottom>
+      <Typography variant="h5" mb={2}>
         Student Applications
       </Typography>
 
-      <MaterialReactTable
+      <CommonMRT
         columns={columns}
-        data={applications}
-        enableRowActions
-        renderRowActions={({ row }) => (
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => {
-              setSelectedApp(row.original);
-              setOpen(true);
-            }}
-          >
-            View
-          </Button>
-        )}
-        initialState={{
-          pagination: { pageSize: 5, pageIndex: 0 },
-          sorting: [{ id: "applied_on", desc: true }],
+        data={students}
+        onView={(row) => {
+          setSelectedStudent(row);
+          setOpen(true);
         }}
-        muiTableBodyRowProps={({ row }) => ({
-          onClick: () => {
-            setSelectedApp(row.original);
-            setOpen(true);
-          },
-          sx: { cursor: "pointer" },
-        })}
       />
 
-      {/* Details Modal */}
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Application Details</DialogTitle>
+      {/* View Dialog */}
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Student Details</DialogTitle>
         <DialogContent dividers>
-          {selectedApp && (
+          {selectedStudent && (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              <Typography><strong>Name:</strong> {selectedStudent.username}</Typography>
+              <Typography><strong>Email:</strong> {selectedStudent.email}</Typography>
+              <Typography><strong>Phone:</strong> {selectedStudent.phone}</Typography>
               <Typography>
-                <strong>Student Name:</strong>{" "}
-                {selectedApp.username || selectedApp.student_name || "N/A"}
+                <strong>Applied On:</strong>{" "}
+                {moment(selectedStudent.date_joined).format("DD-MM-YYYY")}
               </Typography>
               <Typography>
-                <strong>Email:</strong> {selectedApp.email || "N/A"}
-              </Typography>
-              <Typography>
-                <strong>Phone:</strong> {selectedApp.phone || "N/A"}
-              </Typography>
-              <Typography>
-                <strong>Program:</strong>{" "}
-                {selectedApp.program || "Not specified"}
-              </Typography>
-              <Typography>
-                <strong>Course:</strong> {selectedApp.course || "Not specified"}
-              </Typography>
-              <Typography>
-                <strong>Status:</strong> {selectedApp.status || "Pending"}
-              </Typography>
-              <Typography>
-                <strong>Applied On:</strong> {selectedApp.applied_on || "N/A"}
+                <strong>Status:</strong> {selectedStudent.status || "Pending"}
               </Typography>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
-          <Button
-            color="success"
-            startIcon={<CheckCircle />}
-            onClick={() =>
-              selectedApp && handleStatusUpdate(selectedApp.id, "APPROVED")
-            }
-          >
+          <Button startIcon={<CheckCircle />} color="success">
             Approve
           </Button>
-          <Button
-            color="error"
-            startIcon={<Cancel />}
-            onClick={() =>
-              selectedApp && handleStatusUpdate(selectedApp.id, "REJECTED")
-            }
-          >
+          <Button startIcon={<Cancel />} color="error">
             Reject
           </Button>
           <Button onClick={() => setOpen(false)}>Close</Button>

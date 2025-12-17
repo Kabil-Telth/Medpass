@@ -12,6 +12,7 @@ import { getRememberMe } from './Constant';
 import ResetPassword from './pages/Forgetpassword';
 import Forgetmailmodel from './pages/Forgetmailmodel';
 import Agencies from './components_Dash/Users/Agencies/Agencies';
+import AdminPanel from './components_Dash/Users/AdminPanel';
 
 // Lazy load components
 
@@ -140,6 +141,7 @@ function MainContent() {
           <Route path="/dashboard" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="user-types" element={<UserDetails />} />
+            <Route path='admins' element={<AdminPanel />} />
             <Route path="university" element={<University />} />
             <Route path='courses' element={<CourseDetails />} />
             <Route path="agencies" element={<Agencies />} />

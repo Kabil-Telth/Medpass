@@ -1,15 +1,9 @@
-import { Box, Button, IconButton, Tooltip, Typography } from "@mui/material";
-import {
-  MaterialReactTable,
-  MRT_GlobalFilterTextField,
-  MRT_ToggleFiltersButton,
-  useMaterialReactTable,
-} from "material-react-table";
 import React, { useEffect, useMemo, useReducer } from "react";
-import { getAllUser } from "../../../API/UserApi";
 import { toast } from "react-toastify";
-import { Delete, Edit } from "@mui/icons-material";
 import moment from "moment";
+import { Box,  Typography } from "@mui/material";
+import { getAllUser } from "../../../API/UserApi";
+import CommonMRT from "../../../components/MaterialReactTable";
 
 const Agencies = () => {
   const getInitialState = () => {
@@ -90,50 +84,12 @@ const Agencies = () => {
     []
   );
 
-  const userTable = useMaterialReactTable({
-    columns: agentCloumns,
-    data: initialState.data,
-    enableRowSelection: false,
-    enableColumnOrdering: true,
-    enableFacetedValues: true,
-    initialState: { showGlobalFilter: true },
-    positionGlobalFilter: "left",
-    renderTopToolbar: ({ table }) => (
-      <Box
-        sx={{ display: "flex", gap: "0.5rem", p: "0.5rem", flexWrap: "wrap" }}
-      >
-        <MRT_GlobalFilterTextField table={table} />
-        <MRT_ToggleFiltersButton table={table} />
-      </Box>
-    ),
-    renderRowActions: ({ row }) => (
-      <Box sx={{ display: "flex", gap: "0.5rem" }}>
-        <Tooltip title="Edit">
-          <IconButton onClick={() => console.log("Edit user:", row.original)}>
-            <Edit />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton
-            color="error"
-            onClick={() => console.log("Delete user:", row.original)}
-          >
-            <Delete />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    ),
-    muiTablePaperProps: {
-      elevation: 3,
-    },
-  });
-
   return (
     <Box p={3}>
       <Typography variant="h5" gutterBottom>
         Agent
       </Typography>
-      <MaterialReactTable table={userTable} />
+      <CommonMRT columns={agentCloumns} data={initialState.data} />
     </Box>
   );
 };
