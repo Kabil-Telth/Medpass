@@ -1,4 +1,8 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import moment from "moment";
+import { MoreVerticalIcon } from "lucide-react";
+import { Modal } from "react-bootstrap";
+import { toast } from "react-toastify";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import TabContext from "@mui/lab/TabContext";
@@ -8,38 +12,17 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
-import { styled } from "@mui/material/styles";
 import Collapse from "@mui/material/Collapse";
-import moment from "moment";
-import {
-  MaterialReactTable,
-  useMaterialReactTable,
-  MRT_GlobalFilterTextField,
-  MRT_ToggleFiltersButton,
-} from "material-react-table";
 import { IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
 import UniversityForm from "./UniversityForm";
-import UserForm from "./UserForm";
 import {
   deleteUnversitiesApi,
   getUniversitiesApi,
 } from "../../../API/UserTypesApi";
-import { MoreVerticalIcon } from "lucide-react";
-import { Modal } from "react-bootstrap";
-import { toast } from "react-toastify";
 import EmailRoleModal from "../EmailRoleModal";
 import { getAllUser } from "../../../API/UserApi";
-
-const SectionHeader = styled(Box)(({ theme }) => ({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: theme.spacing(2),
-  padding: theme.spacing(2),
-  backgroundColor: theme.palette.background.default,
-  borderRadius: theme.shape.borderRadius,
-}));
+import CommonMRT from "../../../components/MaterialReactTable";
+import { SectionHeader } from "../../../CommonStyle";
 
 function University() {
   const [value, setValue] = useState("1");
@@ -97,7 +80,7 @@ function University() {
         toast.error("Failed to delete university");
       })
       .finally(() => {
-        setShowDeleteModal(false);
+        setShowModal(false); // Close the modal
       });
   };
 
@@ -139,7 +122,7 @@ function University() {
 
   const userColumns = useMemo(
     () => [
-      {
+    {
         accessorKey: 'index',
         header: "S.No",
         size: 80,
@@ -329,6 +312,7 @@ function University() {
         <MRT_ToggleFiltersButton table={table} />
       </Box>
     ),
+
     muiTablePaperProps: {
       elevation: 6,
     },
@@ -375,7 +359,7 @@ function University() {
             onClose={handleCancel}
           />
 
-          <MaterialReactTable table={userTable} />
+          <CommonMRT columns={userColumns} data={users} />
         </TabPanel>
 
         <TabPanel value="2" sx={{ p: 0, mt: 1 }}>
@@ -412,7 +396,7 @@ function University() {
             </Box>
           </Collapse>
 
-          <MaterialReactTable table={universityTable} />
+          <CommonMRT columns={universityColumns} data={universities} />
         </TabPanel>
 
         {/* Delete Confirmation Modal */}

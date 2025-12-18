@@ -6,7 +6,7 @@ import {
   Avatar, Typography, Stack, Modal, Box, IconButton, InputAdornment
 } from '@mui/material';
 import { Visibility, VisibilityOff, CameraAlt, ArrowBack, Edit, Save, Lock } from '@mui/icons-material';
-import { getUser, profileUpdate, resetPassword } from '../../API/UserApi';
+import { getProfileUser, getUser, profileUpdate, resetPassword } from '../../API/UserApi';
 import { getUserDetails } from '../../Constant';
 import { toast } from 'react-toastify';
 
@@ -311,6 +311,7 @@ const ProfileDetails = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const userDetails = getUserDetails();
+  let userId = localStorage.getItem('userId')
 
   useEffect(() => {
     getUserDetail();
@@ -318,7 +319,7 @@ const ProfileDetails = () => {
 
   const getUserDetail = async () => {
     try {
-      const responseData = await getUser(userDetails.userName);
+      const responseData = await getProfileUser(userId);
       if (responseData) {
         setUser({
           ...user,
@@ -391,7 +392,7 @@ const ProfileDetails = () => {
         new_password: passwordData.newPassword
       };
 
-      const responseData = await resetPassword(userDetails.userName, passwordDetails);
+      const responseData = await resetPassword(userDetails.userName.email, passwordDetails);
 
       if (responseData) {
         toast.success(responseData?.message);

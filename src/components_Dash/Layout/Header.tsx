@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, title }) => {
   const userButtonRef = useRef(null);
   
   let userDetails = getUserDetails();
-  const firstLetter = userDetails?.userName?.charAt(0) || '';
+  const firstLetter = userDetails?.userName?.email.charAt(0) || '';
 
   const handleUserClick = () => {
     setUserPopoverOpen(true);

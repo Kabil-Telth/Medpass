@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -17,6 +17,7 @@ import {
   UserCog,
   School,
   BookOpen,
+  Database,
 } from 'lucide-react';
 import { clearAllLocalStorage } from '../../Constant';
 import Logout from './Logout';
@@ -33,37 +34,191 @@ interface MenuItem {
   path: string;
   icon: React.ComponentType<any>;
   section?: string;
-  children?: Omit<MenuItem, 'children'>[];
+  allowedRoles?: string[]; 
+  children?: (Omit<MenuItem, 'children'> & { allowedRoles?: string[] })[];
 }
 
-const menuItems: MenuItem[] = [
-  { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+type UserRole = 'TELTH_ADMIN' | 'UNIVERSITY_ADMIN' | 'AGENT' | 'STUDENT';
+
+const allMenuItems: MenuItem[] = [
+  { 
+    id: 'dashboard', 
+    label: 'Dashboard', 
+    path: '/dashboard', 
+    icon: LayoutDashboard,
+    allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT', 'STUDENT']
+  },
   {
     id: 'user-types',
     label: 'User Types',
     path: '/dashboard/user-types',
     icon: Users,
+    allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT'], 
     children: [
-      { id: 'user-types', label: 'Admin', path: '/dashboard/user-types', icon: UserCog },
-      { id: 'university', label: 'University', path: '/dashboard/university', icon: School },
-      { id: 'agencies', label: 'Agencies', path: '/dashboard/agencies', icon: Building2 },
-      { id: 'students', label: 'Students', path: '/dashboard/students', icon: GraduationCap },
+      { 
+        id: 'user-types', 
+        label: 'Master', 
+        path: '/dashboard/user-types', 
+        icon: Database,
+        allowedRoles: ['TELTH_ADMIN']
+      },
+      { 
+        id: 'admins', 
+        label: 'Admin', 
+        path: '/dashboard/admins', 
+        icon: UserCog,
+        allowedRoles: ['TELTH_ADMIN']
+      },
+      { 
+        id: 'university', 
+        label: 'University', 
+        path: '/dashboard/university', 
+        icon: School,
+        allowedRoles: ['TELTH_ADMIN']
+      },
+      { 
+        id: 'agencies', 
+        label: 'Agencies', 
+        path: '/dashboard/agencies', 
+        icon: Building2,
+        allowedRoles: ['TELTH_ADMIN']
+      },
+      { 
+        id: 'students', 
+        label: 'Students', 
+        path: '/dashboard/students', 
+        icon: GraduationCap,
+        allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT']
+      },
     ]   
   },
-  { id: 'courses', label: 'Courses', path: '/dashboard/courses', icon: BookOpen },
-  { id: 'notice', label: 'Notice', path: '/dashboard/notice', icon: FileText },
-  { id: 'fees-management', label: 'Fees Management', path: '/dashboard/fees-management', icon: CreditCard },
-  { id: 'setting', label: 'Setting', path: '/dashboard/setting', icon: Settings, section: 'OTHERS' },
-  { id: 'profile', label: 'Profile', path: '/dashboard/profile', icon: User },
-  { id: 'help', label: 'Help', path: '/dashboard/help', icon: HelpCircle },
-  { id: 'logout', label: 'Logout', path: '#', icon: LogOut }
-] 
+  { 
+    id: 'courses', 
+    label: 'Courses', 
+    path: '/dashboard/courses', 
+    icon: BookOpen,
+    allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT', 'STUDENT']
+  },
+  { 
+    id: 'notice', 
+    label: 'Notice', 
+    path: '/dashboard/notice', 
+    icon: FileText,
+    allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT', 'STUDENT']
+  },
+  { 
+    id: 'fees-management', 
+    label: 'Fees Management', 
+    path: '/dashboard/fees-management', 
+    icon: CreditCard,
+    allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT']
+  },
+  { 
+    id: 'setting', 
+    label: 'Setting', 
+    path: '/dashboard/setting', 
+    icon: Settings, 
+    section: 'OTHERS',
+    allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT', 'STUDENT']
+  },
+  { 
+    id: 'profile', 
+    label: 'Profile', 
+    path: '/dashboard/profile', 
+    icon: User,
+    allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT', 'STUDENT']
+  },
+  { 
+    id: 'help', 
+    label: 'Help', 
+    path: '/dashboard/help', 
+    icon: HelpCircle,
+    allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT', 'STUDENT']
+  },
+  { 
+    id: 'logout', 
+    label: 'Logout', 
+    path: '#', 
+    icon: LogOut,
+    allowedRoles: ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT', 'STUDENT']
+  }
+];
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogoutClick }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [userRole, setUserRole] = useState<UserRole>('STUDENT');
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const getUserRole = () => {
+      try {
+        const storedRole = localStorage.getItem('role');
+        if (storedRole && ['TELTH_ADMIN', 'UNIVERSITY_ADMIN', 'AGENT', 'STUDENT'].includes(storedRole)) {
+          setUserRole(storedRole as UserRole);
+        }
+      } catch (error) {
+        console.error('Error getting user role:', error);
+      }
+    };
+
+    getUserRole();
+  }, []);
+
+  useEffect(() => {
+    const filterMenuItems = () => {
+      const filteredItems = allMenuItems
+        .map(item => {
+          // Check if user has access to this item
+          if (!item.allowedRoles?.includes(userRole)) {
+            return null;
+          }
+
+          // If item has children, filter them too
+          if (item.children) {
+            const filteredChildren = item.children
+              .filter(child => child.allowedRoles?.includes(userRole))
+              .map(child => ({
+                ...child,
+                // Remove allowedRoles from child to prevent React prop warnings
+                allowedRoles: undefined
+              }));
+
+            // Only include parent if it has at least one child (or if it's a parent item that should be visible regardless)
+            if (filteredChildren.length === 0) {
+              return null;
+            }
+
+            return {
+              ...item,
+              children: filteredChildren,
+              // Remove allowedRoles from parent
+              allowedRoles: undefined
+            };
+          }
+
+          // Return item without allowedRoles for regular items
+          return {
+            ...item,
+            allowedRoles: undefined
+          };
+        })
+        .filter(item => item !== null) as MenuItem[];
+
+      setMenuItems(filteredItems);
+    };
+
+    filterMenuItems();
+  }, [userRole]);
+
+  // Helper function to check if user has access to a route
+  const hasAccess = (allowedRoles?: string[]) => {
+    if (!allowedRoles) return true;
+    return allowedRoles.includes(userRole);
+  };
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -146,12 +301,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogoutClick }) => 
         before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:pointer-events-none
       `}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 backdrop-blur-sm">
+        <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 backdrop-blur-lg">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-sm drop-shadow-sm">A</span>
+            <div>
+              <span className="text-gray-800 font-semibold text-sm uppercase tracking-wide block">welcome back</span>
+              <span className="text-gray-500 text-xs font-medium uppercase tracking-wider">
+                {userRole.replace('_', ' ')}
+              </span>
             </div>
-            <span className="text-gray-800 font-semibold text-sm tracking-wide">ADMIN USER NAME</span>
           </div>
           <button
             onClick={onClose}
@@ -229,11 +386,3 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onLogoutClick }) => 
 };
 
 export default Sidebar;
-
-
-
-
-
-
-
-

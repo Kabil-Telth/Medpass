@@ -20,12 +20,14 @@ const TOKEN_KEYS = {
   access: 'access_token',
   refresh: 'refresh_token',
   role: 'role',
+  userId: 'userId'
 };
 
-const setToken = ({ access, refresh, role }) => {
+const setToken = ({ access, refresh, role, userId }) => {
   localStorage.setItem(TOKEN_KEYS.access, access);
   localStorage.setItem(TOKEN_KEYS.refresh, refresh);
   localStorage.setItem(TOKEN_KEYS.role, role);
+  localStorage.setItem(TOKEN_KEYS.userId, userId)
 };
 
 const getToken = () => {
@@ -42,7 +44,7 @@ const setUserDetails = (userDetails) => {
 
 const getUserDetails = () => {
   return {
-    userName: localStorage.getItem('user_Details') ? JSON.parse(localStorage.getItem('user_Details')).userName : '',
+    userName: localStorage.getItem('user_Details') ? JSON.parse(localStorage.getItem('user_Details')) : '',
   };
 }
 

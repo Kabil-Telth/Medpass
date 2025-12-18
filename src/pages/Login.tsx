@@ -21,6 +21,7 @@ import {
   InputAdornment,
   IconButton
 } from "@mui/material";
+import { handleApiError } from "../utils/ApiHepler";
 
 export default function AuthForm() {
   const navigate = useNavigate();
@@ -29,18 +30,17 @@ export default function AuthForm() {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [userDetails, setUserDetail] = useState({
-    userName: "",
     email: "",
     password: "",
     rememberMe: false,
   });
   const [errors, setErrors] = useState({
-    userName: false,
+    email: false,
     password: false,
     otp: false
   });
   const [touched, setTouched] = useState({
-    userName: false,
+    email: false,
     password: false,
     otp: false
   });
@@ -60,8 +60,8 @@ export default function AuthForm() {
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
 
-    if (field === 'userName' && !userDetails.userName.trim()) {
-      setErrors(prev => ({ ...prev, userName: true }));
+    if (field === 'email' && !userDetails.email.trim()) {
+      setErrors(prev => ({ ...prev, email: true }));
     }
     if (field === 'password' && !userDetails.password.trim()) {
       setErrors(prev => ({ ...prev, password: true }));
@@ -72,7 +72,7 @@ export default function AuthForm() {
 
   const validateForm = () => {
     const newErrors = {
-      userName: !userDetails.userName.trim(),
+      email: !userDetails.email.trim(),
       password: !userDetails.password.trim(),
     };
 
@@ -80,11 +80,11 @@ export default function AuthForm() {
 
     setTouched((prev) => ({
       ...prev,
-      userName: true,
+      email: true,
       password: true,
     }));
 
-    return !newErrors.userName && !newErrors.password;
+    return !newErrors.email && !newErrors.password;
   };
 
   const handleSubmit = async (e) => {
@@ -98,7 +98,7 @@ export default function AuthForm() {
     try {
       setIsLoading(true);
       const otpResponse = await otpVerfiyAPi({
-        email: userDetails.userName,
+        email: userDetails.email,
         password: userDetails.password,
       });
 
@@ -106,11 +106,7 @@ export default function AuthForm() {
       toast.success("OTP sent successfully! Please check your phone/email.");
 
     } catch (error) {
-      const errorMessage = error?.response?.data?.detail ||
-        error?.response?.data?.message ||
-        error?.message ||
-        "Invalid credentials";
-      toast.error(`Login failed: ${errorMessage}`);
+      handleApiError(error)
     } finally {
       setIsLoading(false);
     }
@@ -126,26 +122,23 @@ export default function AuthForm() {
     try {
       setIsLoading(true);
       const responseData = await loginApi({
-        email: userDetails.userName,
+        email: userDetails.email,
         password: userDetails.password,
         otp: otp,
       });
-      setUserDetails(userDetails);
+      setUserDetails({email: userDetails.email, rememberMe: userDetails.rememberMe});
       setToken({
         access: responseData.access,
         refresh: responseData.refresh,
-        role: responseData.role
+        role: responseData.role,
+        userId: responseData.pk,
       });
       setOtp("");
       toast.success("Login successful!");
       setRememberMe(userDetails.rememberMe);
       navigate("/dashboard");
     } catch (error) {
-      const errorMessage = error?.response?.data?.detail ||
-        error?.response?.data?.message ||
-        error?.message ||
-        "OTP verification failed";
-      toast.error(`OTP verification failed: ${errorMessage}`);
+      handleApiError(error)
       setOtp("");
       setErrors((prev) => ({ ...prev, otp: true }));
     } finally {
@@ -183,18 +176,18 @@ export default function AuthForm() {
           <form onSubmit={handleSubmit}>
             <h1 className="text-2xl font-bold text-center mb-6">Sign In</h1>
 
-            {/* Username */}
+            {/* email */}
             <TextField
               fullWidth
-              name="userName"
-              label="Username"
-              placeholder="Enter your username"
-              value={userDetails.userName}
+              name="email"
+              label="email"
+              placeholder="Enter your email"
+              value={userDetails.email}
               onChange={handleChange}
-              onBlur={() => handleBlur('userName')}
+              onBlur={() => handleBlur('email')}
               required
-              error={errors.userName && touched.userName}
-              helperText={errors.userName && touched.userName ? "Username is required" : ""}
+              error={errors.email && touched.email}
+              helperText={errors.email && touched.email ? "email is required" : ""}
               sx={{ mb: 2 }}
               variant="outlined"
             />

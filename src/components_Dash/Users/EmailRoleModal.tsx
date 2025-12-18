@@ -22,6 +22,7 @@ import { Close, Email, Send } from "@mui/icons-material";
 import { makeStyles } from "@mui/styles";
 import { sendInvite } from "../../API/UserApi";
 import { toast } from "react-toastify";
+import { handleApiError } from "../../utils/ApiHepler";
 
 interface EmailRoleModalProps {
   open: boolean;
@@ -126,8 +127,6 @@ const EmailRoleModal: React.FC<EmailRoleModalProps> = ({ open, onClose, role }) 
         role: roleToUse
       }));
 
-      console.log("Sending payload:", payload); // Debug log 
-
       await sendInvite(payload);
       toast.success("Invites sent successfully!");
 
@@ -136,25 +135,8 @@ const EmailRoleModal: React.FC<EmailRoleModalProps> = ({ open, onClose, role }) 
       setSelectedRole(role || "");
       onClose();
     } catch (error: any) {
-      console.error("❌ Error sending invites:", error);
       
-      // Better error handling
-      let errorMessage = "Failed to send invites. Please try again.";
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response?.data?.detail) {
-        errorMessage = error.response.data.detail;
-      } else if (error.response?.data) {
-        // If the error data is an object, try to extract meaningful info
-        errorMessage = typeof error.response.data === 'string' 
-          ? error.response.data 
-          : JSON.stringify(error.response.data);
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
+    handleApiError(error)
     } finally {
       setIsLoading(false);
     }
