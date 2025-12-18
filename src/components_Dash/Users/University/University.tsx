@@ -171,7 +171,7 @@ function University() {
           
           const handleUpdate = () => {
             handleClose();
-            setSelectedUniversity(row.original);
+            setSelectedUniversity(row.original);      
             setUniversityFormMode("edit");
             setShowUniversityForm(true);
           };
