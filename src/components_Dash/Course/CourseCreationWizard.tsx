@@ -63,7 +63,7 @@ const CourseCreationWizard: React.FC = () => {
         department: '',
         credit_hours: '',
         application_status: '',
-        course: 0
+        course: 0    
     })
 
     useEffect(() => {

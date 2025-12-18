@@ -12,7 +12,7 @@ import { styled } from '@mui/material/styles';
 import { signUp } from '../../../API/UserApi';
 import { toast } from 'react-toastify';
 
-const FormPaper = styled(Paper)(({ theme }) => ({
+const FormPaper = styled(Paper)(({ theme }) => ({   
   padding: theme.spacing(3),
   marginTop: theme.spacing(2),
   transition: 'all 0.3s ease',

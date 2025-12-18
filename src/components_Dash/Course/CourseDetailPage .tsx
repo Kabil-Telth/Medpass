@@ -101,7 +101,7 @@ const CourseDetailPage = () => {
         }
     ];
 
-    useEffect(() => {
+    useEffect(() => {   
         // Get course ID from URL parameters
         const searchParams = new URLSearchParams(location.search);
         const courseId = parseInt(searchParams.get('id')) || 2; // Default to Biotechnology course

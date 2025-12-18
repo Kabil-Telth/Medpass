@@ -35,6 +35,6 @@ const getCourseDetail = () => {
 export {
     createCourseApi,
     createCourseDetailsApi,
-    getCourse,
+    getCourse,     
     getCourseDetail
 }
