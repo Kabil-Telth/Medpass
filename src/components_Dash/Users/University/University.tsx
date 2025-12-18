@@ -47,8 +47,9 @@ function University() {
   const [showUniversityForm, setShowUniversityForm] = useState(false);
   const [users, setUsers] = useState([]);
   const [universities, setUniversities] = useState([]);
-  const [getUniversities, setGetUniversities] = useState();
-  const [showModal, setShowModal] = useState(false);
+  const [selectedUniversity, setSelectedUniversity] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [universityFormMode, setUniversityFormMode] = useState("create"); // "create", "edit", or "delete"
   let roleData: string = "UNIVERSITY_ADMIN";
 
   useEffect(() => {
@@ -79,32 +80,44 @@ function University() {
     });
   };
 
-  const deleteDetails = () => {
-    if (!getUniversities || !getUniversities.id) return;
+  const handleDeleteConfirm = () => {
+    if (!selectedUniversity || !selectedUniversity.id) {
+      toast.error("No university selected for deletion");
+      return;
+    }
 
-    deleteUnversitiesApi(getUniversities.id)
+    deleteUnversitiesApi(selectedUniversity.id)
       .then(() => {
         toast.success("University deleted successfully");
         getUniversityDetails();
+        setSelectedUniversity(null);
       })
       .catch((err) => {
         console.error("Error deleting university:", err);
         toast.error("Failed to delete university");
       })
       .finally(() => {
-        setShowModal(false); // Close the modal
+        setShowDeleteModal(false);
       });
   };
+
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
   const toggleUserForm = () => {
     setShowUserForm(!showUserForm);
-    if (showUniversityForm) setShowUniversityForm(false);
+    if (showUniversityForm) {
+      setShowUniversityForm(false);
+      setUniversityFormMode("create");
+    }
   };
 
   const toggleUniversityForm = () => {
+    if (!showUniversityForm) {
+      setUniversityFormMode("create");
+      setSelectedUniversity(null);
+    }
     setShowUniversityForm(!showUniversityForm);
     if (showUserForm) setShowUserForm(false);
   };
@@ -112,21 +125,26 @@ function University() {
   const handleCancel = () => {
     setShowUserForm(false);
     setShowUniversityForm(false);
+    setSelectedUniversity(null);
+    setUniversityFormMode("create");
     getUniversityDetails();
   };
 
-  const onHide = () => {
-    setShowModal(false);
+  const handleUniversityFormSuccess = () => {
+    getUniversityDetails();
+    setShowUniversityForm(false);
+    setSelectedUniversity(null);
+    setUniversityFormMode("create");
   };
 
   const userColumns = useMemo(
     () => [
-    {
+      {
         accessorKey: 'index',
         header: "S.No",
         size: 80,
         Cell: ({ row }) => row.index + 1,
-    },
+      },
       {
         accessorKey: "email",
         header: "Email",
@@ -152,34 +170,35 @@ function University() {
 
   const universityColumns = useMemo(
     () => [
-      {
-        id: "actions",
-        header: "Actions",
-        size: 100,
+      { 
+        id: "actions", 
+        header: "Actions", 
+        size: 100, 
         Cell: ({ row }) => {
-          const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+          const [anchorEl, setAnchorEl] = useState(null);
           const open = Boolean(anchorEl);
-
-          const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+          
+          const handleClick = (event) => {
             setAnchorEl(event.currentTarget);
           };
-
+          
           const handleClose = () => {
             setAnchorEl(null);
           };
-
+          
           const handleUpdate = () => {
             handleClose();
-            setGetUniversities(row.original);
+            setSelectedUniversity(row.original);
+            setUniversityFormMode("edit");
             setShowUniversityForm(true);
           };
-
+          
           const handleDelete = () => {
             handleClose();
-            setShowModal(true);
-            setGetUniversities(row.original);
+            setSelectedUniversity(row.original);
+            setShowDeleteModal(true);
           };
-
+          
           return (
             <>
               <IconButton onClick={handleClick}>
@@ -191,10 +210,10 @@ function University() {
               </Menu>
             </>
           );
-        },
+        }
       },
       {
-        accessorKey: "university_logo",
+        accessorKey: "logo",
         header: "Logo",
         size: 100,
         Cell: ({ cell }) => {
@@ -203,61 +222,36 @@ function University() {
             <img
               src={logoUrl}
               alt="University Logo"
-              style={{
-                width: 40,
-                height: 40,
-                objectFit: "contain",
-                borderRadius: "4px",
-              }}
+              style={{ width: 40, height: 40, objectFit: "contain" }}
             />
           ) : (
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                bgcolor: "grey.200",
-                color: "text.secondary",
-                fontSize: 12,
-                borderRadius: "4px",
-              }}
-            >
-              N/A
-            </Box>
+            <Box sx={{ width: 40, height: 40, bgcolor: "grey.200" }}>N/A</Box>
           );
         },
       },
       {
-        accessorKey: "university_name",
+        accessorKey: "name",
         header: "University Name",
-        size: 200,
       },
       {
-        accessorKey: "university_email",
+        accessorKey: "email",
         header: "Email",
-        size: 200,
       },
       {
         accessorKey: "established_year",
         header: "Established Year",
-        size: 150,
       },
       {
-        accessorKey: "university_address",
+        accessorKey: "address",
         header: "Location",
-        size: 200,
       },
       {
         accessorKey: "contact_number",
-        header: "Students",
-        size: 120,
+        header: "Contact",
       },
       {
         accessorKey: "is_active",
         header: "Status",
-        size: 100,
         Cell: ({ cell }) => (
           <Box
             component="span"
@@ -268,8 +262,8 @@ function University() {
               color: cell.getValue()
                 ? theme.palette.success.dark
                 : theme.palette.error.dark,
-              borderRadius: "0.25rem",
-              p: "0.25rem 0.5rem",
+              borderRadius: "4px",
+              px: 1,
               fontWeight: "bold",
             })}
           >
@@ -335,7 +329,6 @@ function University() {
         <MRT_ToggleFiltersButton table={table} />
       </Box>
     ),
-
     muiTablePaperProps: {
       elevation: 6,
     },
@@ -411,8 +404,10 @@ function University() {
               }}
             >
               <UniversityForm
+                mode={universityFormMode}
+                universityData={selectedUniversity}
                 onCancel={handleCancel}
-                universityData={getUniversities}
+                onSuccess={handleUniversityFormSuccess}
               />
             </Box>
           </Collapse>
@@ -420,28 +415,35 @@ function University() {
           <MaterialReactTable table={universityTable} />
         </TabPanel>
 
-        <Modal show={showModal} onHide={onHide} centered backdrop="static">
+        {/* Delete Confirmation Modal */}
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered backdrop="static">
           <Modal.Body className="text-center p-4">
             <div className="mb-4">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100"></div>
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.795-.833-2.565 0L4.232 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Confirm Logout
+              Delete University
             </h3>
             <p className="text-sm text-gray-500 mb-4">
-              Are you sure you want to logout from the system?
+              Are you sure you want to delete "<strong>{selectedUniversity?.name}</strong>"?
+              This action cannot be undone.
             </p>
             <div className="flex justify-center space-x-3">
               <Button
-                variant="outline-secondary"
-                onClick={onHide}
+                variant="outlined"
+                onClick={() => setShowDeleteModal(false)}
                 className="px-4 py-2"
               >
                 Cancel
               </Button>
               <Button
-                variant="danger"
-                onClick={deleteDetails}
+                variant="contained"
+                color="error"
+                onClick={handleDeleteConfirm}
                 className="px-4 py-2"
               >
                 Delete

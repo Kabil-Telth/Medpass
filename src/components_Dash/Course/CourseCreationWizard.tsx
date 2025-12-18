@@ -44,6 +44,7 @@ const CourseCreationWizard: React.FC = () => {
     const [activeStep, setActiveStep] = useState<number>(0);
     const [programId, setProgramId] = useState<number | null>(null);
     const [universities, setUniversities] = useState<University[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [programData, setProgramData] = useState<ProgramData>({
         name: '',
@@ -51,7 +52,7 @@ const CourseCreationWizard: React.FC = () => {
         duration: '',
         fees: '',
         location: '',
-        university: 5,
+        university: 0, // Changed from 5 to 0 for "Select University"
     });
 
     const [courseData, setCourseData] = useState<CourseData>({
@@ -62,12 +63,12 @@ const CourseCreationWizard: React.FC = () => {
         department: '',
         credit_hours: '',
         application_status: '',
-        course: 5
-    });
+        course: 0
+    })
 
     useEffect(() => {
-        getUniversityDetail();
-    }, []);
+        getUniversityDetail()
+    }, [])
 
     const handleProgramChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -112,16 +113,24 @@ const CourseCreationWizard: React.FC = () => {
 
     const getUniversityDetail = async () => {
         try {
+            setIsLoading(true);
             const data = await getUniversitiesApi();
-            const resultData = data.results;
+            const resultData = data.results || [];
+            
+            console.log("Universities API response:", resultData); // Debug log
+            
             const universityOptions: University[] = resultData.map((element: any) => ({
                 value: element.id,
-                label: element.university_name
+                label: element.name // Changed from university_name to name
             }));
+            
+            console.log("University options:", universityOptions); // Debug log
             setUniversities(universityOptions);
         } catch (error) {
             console.error("Error fetching universities:", error);
             toast.error("Failed to load universities");
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -132,6 +141,12 @@ const CourseCreationWizard: React.FC = () => {
             toast.error("Please fill all required fields for the program");
             return;
         }
+        
+        if (university === 0) {
+            toast.error("Please select a university");
+            return;
+        }
+        
         setActiveStep(prev => prev + 1);
     };
 
@@ -139,84 +154,105 @@ const CourseCreationWizard: React.FC = () => {
         setActiveStep(prev => prev - 1);
     };
 
-    const handleSubmitCourse = async () => {
-        const { name, code, duration, fees, location, university } = programData;
+  const handleSubmitCourse = async () => {
+    const { name, code, duration, fees, location, university } = programData;
 
-        try {
-            const programDetail = {
-                name,
-                code,
-                duration,
-                fees,
-                location,
-                university,
-            };
+    if (!programData.university || programData.university === 0) {
+        toast.error("Please select a university");
+        return;
+    }
 
-            const programRes = await createCourseApi(programDetail);
-            if (!programRes?.id) {
-                toast.error("Failed to create program");
-                return;
-            }
-
-            const newProgramId = programRes.id;
-            setProgramId(newProgramId);
-            const { summary, qualifications, poster, department, credit_hours, application_status } = courseData;
-
-            if (!summary || !qualifications || !department || !credit_hours || !application_status) {
-                toast.error("Please fill all required fields for the course");
-                return;
-            }
-
-            const courseDetail = {
-                summary,
-                qualifications,
-                poster,
-                department,
-                credit_hours,
-                application_status,
-                course: newProgramId,
-            };
-
-            const formData = new FormData();
-            Object.entries(courseDetail).forEach(([key, value]) => {
-                if (value !== null && value !== undefined) {
-                    formData.append(key, value as string | Blob);
-                }
-            });
-
-            const res = await createCourseDetailsApi(formData);
-            if (res) {
-                toast.success("Course details added successfully!");
-                setActiveStep(steps.length);
-
-                setProgramData({
-                    name: "",
-                    code: "",
-                    duration: "",
-                    fees: "",
-                    location: "",
-                    university: 0,
-                });
-                setCourseData({
-                    summary: "",
-                    qualifications: "",
-                    poster: null,
-                    rating: "",
-                    department: "",
-                    credit_hours: "",
-                    application_status: "",
-                    course: 0,
-                });
-                setProgramId(null);
-            } else {
-                throw new Error("Failed to create course details");
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to create program or course details");
+    try {
+        // Validate program data
+        if (!name || !code || !duration || !fees || !location) {
+            toast.error("Please fill all program details");
+            return;
         }
-    };
 
+        const programDetail = {
+            name,
+            code,
+            duration,
+            fees,
+            location,
+            university: programData.university,
+        };
+
+        console.log("Creating program:", programDetail);
+
+        const programRes = await createCourseApi(programDetail);
+        
+        if (!programRes?.id) {
+            toast.error("Failed to create program");
+            return;
+        }
+
+        const newProgramId = programRes.id;
+        setProgramId(newProgramId);
+        
+        // Validate course data
+        const { summary, qualifications, poster, department, credit_hours, application_status } = courseData;
+
+        if (!summary || !qualifications || !department || !credit_hours || !application_status) {
+            toast.error("Please fill all required fields for the course");
+            return;
+        }
+
+        // Create FormData with FLAT structure (not nested)
+        const formData = new FormData();
+        
+        // Add each field individually to FormData
+        formData.append('summary', summary);
+        formData.append('qualifications', qualifications);
+        formData.append('department', department);
+        formData.append('credit_hours', credit_hours);
+        formData.append('application_status', application_status);
+        formData.append('course', newProgramId.toString()); // Convert to string
+        
+        // Add poster if exists
+        if (poster && poster instanceof File) {
+            formData.append('poster', poster);
+        }
+
+        // Debug: Log FormData contents
+        console.log("FormData contents:");
+        for (let [key, val] of formData.entries()) {
+            console.log(`${key}:`, val, typeof val);
+        }
+
+        const res = await createCourseDetailsApi(formData);
+        if (res) {
+            toast.success("Course details added successfully!");
+            setActiveStep(steps.length);
+
+            // Reset form
+            setProgramData({
+                name: "",
+                code: "",
+                duration: "",
+                fees: "",
+                location: "",
+                university: 0,
+            });
+            setCourseData({
+                summary: "",
+                qualifications: "",
+                poster: null,
+                rating: "",
+                department: "",
+                credit_hours: "",
+                application_status: "",
+                course: 0,
+            });
+            setProgramId(null);
+        } else {
+            throw new Error("Failed to create course details");
+        }
+    } catch (err) {
+        console.error("Error creating course:", err);
+        toast.error("Failed to create program or course details");
+    }
+};
     return (
         <Fade in={true}>
             <Box sx={{
@@ -269,37 +305,49 @@ const CourseCreationWizard: React.FC = () => {
                         {/* Step 1 - Program Details */}
                         <Slide direction="right" in={activeStep === 0} mountOnEnter unmountOnExit>
                             <Box>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} sx={{ width: '40%' }}>
+                                <Grid container spacing={3}>
+                                    {/* University Dropdown - Full width on mobile, half on larger screens */}
+                                    <Grid item xs={12} sm={6}>
                                         <FormControl fullWidth>
-                                            <InputLabel id="university-label">University</InputLabel>
+                                            <InputLabel id="university-label">University *</InputLabel>
                                             <Select
                                                 labelId="university-label"
-                                                label="University"
+                                                label="University *"
                                                 name="university"
                                                 value={programData.university}
                                                 onChange={handleUniversitySelectChange}
+                                                disabled={isLoading}
                                             >
                                                 <MenuItem value={0}>
                                                     <em>Select University</em>
                                                 </MenuItem>
-                                                {universities.map((uni) => (
-                                                    <MenuItem key={uni.value} value={uni.value}>
-                                                        {uni.label}
-                                                    </MenuItem>
-                                                ))}
+                                                {isLoading ? (
+                                                    <MenuItem disabled>Loading universities...</MenuItem>
+                                                ) : (
+                                                    universities.map((uni) => (
+                                                        <MenuItem key={uni.value} value={uni.value}>
+                                                            {uni.label}
+                                                        </MenuItem>
+                                                    ))
+                                                )}
                                             </Select>
+                                            {universities.length === 0 && !isLoading && (
+                                                <Typography variant="caption" color="error" sx={{ mt: 1 }}>
+                                                    No universities available. Please add universities first.
+                                                </Typography>
+                                            )}
                                         </FormControl>
                                     </Grid>
 
                                     <Grid item xs={12} sm={6}>
                                         <TextField
                                             fullWidth
-                                            label="Program Name"
+                                            label="Program Name *"
                                             name="name"
                                             value={programData.name}
                                             onChange={handleProgramChange}
                                             variant="outlined"
+                                            required
                                             InputProps={{
                                                 startAdornment: (
                                                     <InputAdornment position="start">
@@ -313,23 +361,25 @@ const CourseCreationWizard: React.FC = () => {
                                     <Grid item xs={12} sm={6}>
                                         <TextField
                                             fullWidth
-                                            label="Program Code"
+                                            label="Program Code *"
                                             name="code"
                                             value={programData.code}
                                             onChange={handleProgramChange}
                                             variant="outlined"
+                                            required
                                         />
                                     </Grid>
 
                                     <Grid item xs={12} sm={6}>
                                         <TextField
                                             fullWidth
-                                            label="Duration (months)"
+                                            label="Duration (months) *"
                                             name="duration"
                                             type="number"
                                             value={programData.duration}
                                             onChange={handleProgramChange}
                                             variant="outlined"
+                                            required
                                             InputProps={{
                                                 startAdornment: (
                                                     <InputAdornment position="start">
@@ -343,12 +393,13 @@ const CourseCreationWizard: React.FC = () => {
                                     <Grid item xs={12} sm={6}>
                                         <TextField
                                             fullWidth
-                                            label="Fees ($)"
+                                            label="Fees ($) *"
                                             name="fees"
                                             type="number"
                                             value={programData.fees}
                                             onChange={handleProgramChange}
                                             variant="outlined"
+                                            required
                                             InputProps={{
                                                 startAdornment: (
                                                     <InputAdornment position="start">
@@ -359,14 +410,15 @@ const CourseCreationWizard: React.FC = () => {
                                         />
                                     </Grid>
 
-                                    <Grid item xs={12}>
+                                    <Grid item xs={12} sm={6}>
                                         <TextField
                                             fullWidth
-                                            label="Location"
+                                            label="Location *"
                                             name="location"
                                             value={programData.location}
                                             onChange={handleProgramChange}
                                             variant="outlined"
+                                            required
                                             InputProps={{
                                                 startAdornment: (
                                                     <InputAdornment position="start">
@@ -394,7 +446,7 @@ const CourseCreationWizard: React.FC = () => {
                                 <Grid container spacing={3}>
                                     <Grid item xs={12}>
                                         <TextField
-                                            label="Course Summary"
+                                            label="Course Summary *"
                                             name="summary"
                                             fullWidth
                                             multiline
@@ -402,11 +454,12 @@ const CourseCreationWizard: React.FC = () => {
                                             value={courseData.summary}
                                             onChange={handleCourseChange}
                                             variant="outlined"
+                                            required
                                         />
                                     </Grid>
                                     <Grid item xs={12}>
                                         <TextField
-                                            label="Required Qualifications"
+                                            label="Required Qualifications *"
                                             name="qualifications"
                                             fullWidth
                                             multiline
@@ -414,6 +467,7 @@ const CourseCreationWizard: React.FC = () => {
                                             value={courseData.qualifications}
                                             onChange={handleCourseChange}
                                             variant="outlined"
+                                            required
                                             InputProps={{
                                                 startAdornment: (
                                                     <InputAdornment position="start">
@@ -425,23 +479,25 @@ const CourseCreationWizard: React.FC = () => {
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            label="Department"
+                                            label="Department *"
                                             name="department"
                                             fullWidth
                                             value={courseData.department}
                                             onChange={handleCourseChange}
                                             variant="outlined"
+                                            required
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={6}>
                                         <TextField
-                                            label="Credit Hours"
+                                            label="Credit Hours *"
                                             name="credit_hours"
                                             type="number"
                                             fullWidth
                                             value={courseData.credit_hours}
                                             onChange={handleCourseChange}
                                             variant="outlined"
+                                            required
                                             InputProps={{
                                                 startAdornment: (
                                                     <InputAdornment position="start">
@@ -451,20 +507,20 @@ const CourseCreationWizard: React.FC = () => {
                                             }}
                                         />
                                     </Grid>
-                                    <Grid item xs={12} sx={{ minWidth: "20%" }}>
-                                        <FormControl fullWidth variant="outlined" >
-                                            <InputLabel>Status</InputLabel>
+                                    <Grid item xs={12} sm={6}>
+                                        <FormControl fullWidth variant="outlined">
+                                            <InputLabel>Status *</InputLabel>
                                             <Select
                                                 name="application_status"
                                                 value={courseData.application_status}
                                                 onChange={handleApplicationStatusChange}
-                                                label="Status"
+                                                label="Status *"
+                                                required
                                             >
                                                 <MenuItem value="OPEN">OPEN</MenuItem>
                                                 <MenuItem value="CLOSED">CLOSED</MenuItem>
                                             </Select>
                                         </FormControl>
-
                                     </Grid>
                                     <Grid item xs={12}>
                                         <Box sx={{
@@ -493,7 +549,7 @@ const CourseCreationWizard: React.FC = () => {
                                                     startIcon={<AddPhotoAlternate />}
                                                     sx={{ mb: 1 }}
                                                 >
-                                                    Upload Course Poster
+                                                    Upload Course Poster (Optional)
                                                 </Button>
                                             </label>
                                             {courseData.poster && (

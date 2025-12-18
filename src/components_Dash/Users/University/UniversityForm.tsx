@@ -23,35 +23,43 @@ const FormPaper = styled(Paper)(({ theme }) => ({
 const UniversityForm = (props: any) => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
+  const [selectedUniversity, setSelectedUniversity] = useState(null);
+const [deleteId, setDeleteId] = useState(null);
+
   const fileInputRef = useRef(null);
 
-
   const [universityForm, setUniversityForm] = useState({
-    university_name: '',
-    university_email: '',
-    university_address: '',
+    name: '',
+    email: '',
+    address: '',
     established_year: '',
     website: '',
     contact_number: '',
-    id: 0
+    is_active: true,
+    user: '',
+    id: ''
   });
 
   useEffect(() => {
     if (props.universityData) {
       setUniversityForm({
-        university_name: props.universityData.university_name || '',
-        university_email: props.universityData.university_email || '',
-        university_address: props.universityData.university_address || '',
+        name: props.universityData.name || '',
+        email: props.universityData.email || '',
+        address: props.universityData.address || '',
         established_year: props.universityData.established_year || '',
         website: props.universityData.website || '',
         contact_number: props.universityData.contact_number || '',
+        is_active: props.universityData.is_active ?? true,
+        user: props.universityData.user || '',
         id: props.universityData.id || ''
       });
-      if (props.universityData.university_logo) {
-        setLogoPreview(props.universityData.university_logo);
+
+      if (props.universityData.logo) {
+        setLogoPreview(props.universityData.logo);
       }
     }
   }, [props.universityData]);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -61,63 +69,77 @@ const UniversityForm = (props: any) => {
     }));
   };
 
-  const handleUpdate = () => {
-    const formData = new FormData();
-    formData.append('university_name', universityForm.university_name);
-    formData.append('university_email', universityForm.university_email);
-    formData.append('university_address', universityForm.university_address);
-    formData.append('established_year', universityForm.established_year);
-    formData.append('website', universityForm.website);
-    formData.append('contact_number', universityForm.contact_number);
-    formData.append('id', universityForm.id);
+ const handleUpdate = () => {
+  const formData = new FormData();
 
-    if (logoFile) {
-      formData.append('university_logo', logoFile);
-    }
-    universityUpdateApi(universityForm.id, formData)
-      .then(() => {
-        toast.success("University Updated Successfully");
-        setUniversityForm({
-          university_name: '',
-          university_email: '',
-          university_address: '',
-          established_year: '',
-          website: '',
-          contact_number: '',
-          id: ''
-        });
-        setLogoFile(null);
-        setLogoPreview('');
-        if (props.onCancel) props.onCancel();
-      })
-      .catch((error) => {
-        toast.error("Error update university");
-        console.error(error);
-      });
+  formData.append('name', universityForm.name);
+  formData.append('email', universityForm.email);
+  formData.append('address', universityForm.address);
+  formData.append('established_year', universityForm.established_year);
+  formData.append('website', universityForm.website);
+  formData.append('contact_number', universityForm.contact_number);
+formData.append(
+  'is_active',
+  universityForm.is_active ? 'true' : 'false'
+);
+
+  formData.append('user', universityForm.user);
+
+  if (logoFile) {
+    formData.append('logo', logoFile);
   }
+
+  universityUpdateApi(universityForm.id, formData)
+    .then(() => {
+      toast.success("University Updated Successfully");
+
+      setUniversityForm({
+        name: '',
+        email: '',
+        address: '',
+        established_year: '',
+        website: '',
+        contact_number: '',
+        is_active: true,
+        user: '',
+        id: ''
+      });
+
+      setLogoFile(null);
+      setLogoPreview('');
+      props.onCancel?.();
+    })
+    .catch((error) => {
+      toast.error("Error updating university");
+      console.error(error);
+    });
+};
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
     const formData = new FormData();
-    formData.append('university_name', universityForm.university_name);
-    formData.append('university_email', universityForm.university_email);
-    formData.append('university_address', universityForm.university_address);
+    formData.append('name', universityForm.name);
+    formData.append('email', universityForm.email);
+    formData.append('address', universityForm.address);
     formData.append('established_year', universityForm.established_year);
     formData.append('website', universityForm.website);
     formData.append('contact_number', universityForm.contact_number);
+    formData.append('is_active', universityForm.is_active);
+    formData.append('user', universityForm.user);
 
     if (logoFile) {
-      formData.append('university_logo', logoFile);
+      formData.append('logo', logoFile);
     }
+
 
     universityApi(formData)
       .then(() => {
         toast.success("University Created Successfully");
         setUniversityForm({
-          university_name: '',
-          university_email: '',
-          university_address: '',
+          name: '',
+          email: '',
+          address: '',
           established_year: '',
           website: '',
           contact_number: '',
@@ -175,27 +197,26 @@ const UniversityForm = (props: any) => {
           <TextField
             fullWidth
             label="University Name"
-            name="university_name"
-            value={universityForm.university_name}
+            name="name"
+            value={universityForm.name}
             onChange={handleInputChange}
             required
-            variant="outlined"
             size="small"
           />
+
         </Grid>
 
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
             label="University Email"
-            name="university_email"
-            type="email"
-            value={universityForm.university_email}
+            name="email"
+            value={universityForm.email}
             onChange={handleInputChange}
             required
-            variant="outlined"
             size="small"
           />
+
         </Grid>
 
         <Grid item xs={12} sm={6}>
@@ -207,10 +228,9 @@ const UniversityForm = (props: any) => {
             value={universityForm.established_year}
             onChange={handleInputChange}
             required
-            variant="outlined"
             size="small"
-            inputProps={{ min: 1800, max: new Date().getFullYear() }}
           />
+
         </Grid>
 
         <Grid item xs={12} sm={6}>
@@ -218,13 +238,12 @@ const UniversityForm = (props: any) => {
             fullWidth
             label="Contact Number"
             name="contact_number"
-            type="tel"
             value={universityForm.contact_number}
             onChange={handleInputChange}
             required
-            variant="outlined"
             size="small"
           />
+
         </Grid>
 
         <Grid item xs={12}>
@@ -297,15 +316,14 @@ const UniversityForm = (props: any) => {
           <TextField
             fullWidth
             label="University Address"
-            name="university_address"
-            value={universityForm.university_address}
+            name="address"
+            value={universityForm.address}
             onChange={handleInputChange}
-            required
             multiline
             rows={3}
-            variant="outlined"
-            size="small"
+            required
           />
+
         </Grid>
 
         <Grid item xs={12} sm={6}>
@@ -315,10 +333,9 @@ const UniversityForm = (props: any) => {
             name="website"
             value={universityForm.website}
             onChange={handleInputChange}
-            variant="outlined"
             size="small"
-            placeholder="https://example.com"
           />
+
         </Grid>
 
         <Grid item xs={12}>
@@ -347,7 +364,7 @@ const UniversityForm = (props: any) => {
                 onClick={handleSubmit}
               >
                 Create University
-              </Button>
+              </Button>	
             )}
             <Button
               type="button"
